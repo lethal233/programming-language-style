@@ -35,7 +35,7 @@ func main() {
 	for i := 0; i < len(stopWordsArr); i++ {
 		stopWordsSet[stopWordsArr[i]] = true
 	}
-	reg_exp := regexp.MustCompile("[0-9a-zA-Z]+")
+	regExp := regexp.MustCompile("[0-9a-zA-Z]+")
 	for {
 		lineBytes, err := r.ReadBytes('\n') // "word--word"
 		line := strings.TrimSpace(string(lineBytes))
@@ -47,7 +47,7 @@ func main() {
 		}
 		arr := strings.Fields(line)
 		for i := 0; i < len(arr); i++ {
-			w := reg_exp.FindAllString(arr[i], -1)
+			w := regExp.FindAllString(arr[i], -1)
 			for i := 0; i < len(w); i++ {
 				w[i] = strings.ToLower(w[i])
 				if stopWordsSet[w[i]] || len(w[i]) < 2 {

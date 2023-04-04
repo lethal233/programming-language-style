@@ -18,7 +18,7 @@ type words struct {
 func main() {
 	path := os.Args[1]
 	fp, err := os.Open(path)
-	stopWordsPath := "/Volumes/mac-hdd/projects/APL-go/stop_words.txt"
+	stopWordsPath := "../stop_words.txt"
 	if err != nil {
 		panic(err)
 	}

@@ -16,31 +16,27 @@ type words struct {
 }
 
 func main() {
+	stopWordsSet, err := readStopWords("../stop_words.txt")
+	if err != nil {
+		fmt.Println("Error in opening the file that stores stop words......", err)
+		return
+	}
 	path := os.Args[1]
 	fp, err := os.Open(path)
-	stopWordsPath := "../stop_words.txt"
 	if err != nil {
-		panic(err)
+		fmt.Println("Error in opening the text file......")
+		return
 	}
+	defer fp.Close()
 	r := bufio.NewReader(fp)
 	dict := map[string]int32{}
-	stopWords, err := os.Open(stopWordsPath)
-	if err != nil {
-		panic(err)
-	}
-	stopWordsSet := map[string]bool{}
-	stopWordsR := bufio.NewReader(stopWords)
-	stopWordsLine, err := stopWordsR.ReadBytes('\n')
-	stopWordsArr := strings.Split(string(stopWordsLine), ",")
-	for i := 0; i < len(stopWordsArr); i++ {
-		stopWordsSet[stopWordsArr[i]] = true
-	}
 	regExp := regexp.MustCompile("[0-9a-zA-Z]+")
 	for {
 		lineBytes, err := r.ReadBytes('\n') // "word--word"
 		line := strings.TrimSpace(string(lineBytes))
 		if err != nil && err != io.EOF {
-			panic(err)
+			fmt.Println("Unexpected error")
+			return
 		}
 		if err == io.EOF {
 			break
@@ -78,11 +74,24 @@ func main() {
 
 	minNum := 25
 	for i := 0; i < min(minNum, len(lstWords)); i++ {
-		fmt.Printf("%s  -  %d", lstWords[i].Word, lstWords[i].Freq)
-		if i != min(minNum, len(lstWords))-1 {
-			fmt.Println()
-		}
+		fmt.Printf("%s  -  %d\n", lstWords[i].Word, lstWords[i].Freq)
 	}
+}
+
+func readStopWords(stopWordsPath string) (map[string]bool, error) {
+	stopWords, err := os.Open(stopWordsPath)
+	if err != nil {
+		return nil, err
+	}
+	defer stopWords.Close()
+	stopWordsSet := map[string]bool{}
+	stopWordsR := bufio.NewReader(stopWords)
+	stopWordsLine, err := stopWordsR.ReadBytes('\n')
+	stopWordsArr := strings.Split(string(stopWordsLine), ",")
+	for i := 0; i < len(stopWordsArr); i++ {
+		stopWordsSet[stopWordsArr[i]] = true
+	}
+	return stopWordsSet, nil
 }
 
 func min(i int, j int) int {

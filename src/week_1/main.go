@@ -30,7 +30,7 @@ func main() {
 	defer fp.Close()
 	r := bufio.NewReader(fp)
 	dict := map[string]int32{}
-	regExp := regexp.MustCompile("[0-9a-zA-Z]+")
+	regExp := regexp.MustCompile("[a-zA-Z]+")
 	for {
 		lineBytes, err := r.ReadBytes('\n') // "word--word"
 		line := strings.TrimSpace(string(lineBytes))

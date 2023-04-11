@@ -15,10 +15,10 @@ import (
 func main() {
 	stopWords, err := os.Open("../stop_words.txt")
 	if err != nil {
+		fmt.Println("Error in opening the file that stores stop words......", err)
 		os.Exit(1)
 	}
 	defer stopWords.Close()
-	stopWordsSet := map[string]bool{}
 	stopWordsR := bufio.NewReader(stopWords)
 	stopWordsLine, err := stopWordsR.ReadBytes('\n')
 	if err != nil && err != io.EOF {
@@ -26,9 +26,6 @@ func main() {
 		return
 	}
 	stopWordsArr := strings.Split(string(stopWordsLine), ",")
-	for i := 0; i < len(stopWordsArr); i++ {
-		stopWordsSet[stopWordsArr[i]] = true
-	}
 
 	if len(os.Args) < 2 {
 		fmt.Println("Please provide the path to the text file to be processed")
@@ -42,9 +39,10 @@ func main() {
 	}
 	defer fp.Close()
 	r := bufio.NewReader(fp)
-	dict := map[string]int32{}
+	var wordsDict []string
+	var freqDict []int32
 	for {
-		lineBytes, err := r.ReadBytes('\n') // "word--word"
+		lineBytes, err := r.ReadBytes('\n')
 		if err != nil && err != io.EOF {
 			fmt.Println("Unexpected error")
 			return
@@ -54,62 +52,82 @@ func main() {
 		}
 		line := strings.TrimSpace(string(lineBytes))
 		startChar := -1
-
 		for i, c := range line {
 			if startChar == -1 {
 				if unicode.IsLetter(c) || unicode.IsNumber(c) {
 					startChar = i
 				}
 			} else {
+				flag := false
 				if !unicode.IsLetter(c) && !unicode.IsNumber(c) {
 					word := strings.ToLower(line[startChar:i])
-					if stopWordsSet[word] || len(word) < 2 {
+					if len(word) < 2 {
 						startChar = -1
 						continue
 					}
-					v, ok := dict[word]
-					if ok {
-						dict[word] = v + 1
-					} else {
-						dict[word] = 1
+					for _, stopWord := range stopWordsArr {
+						if word == stopWord {
+							startChar = -1
+							flag = true
+						}
 					}
-					startChar = -1
+					for ind, w := range wordsDict {
+						if w == word {
+							freqDict[ind]++
+							startChar = -1
+							flag = true
+							break
+						}
+					}
+					if !flag {
+						wordsDict = append(wordsDict, word)
+						freqDict = append(freqDict, 1)
+						startChar = -1
+					}
 				}
 			}
 		}
+		flag := false
 		if startChar != -1 {
 			word := strings.ToLower(line[startChar:])
-			if stopWordsSet[word] || len(word) < 2 {
-				continue
+			if len(word) < 2 {
+				startChar = -1
+				flag = true
 			}
-			v, ok := dict[word]
-			if ok {
-				dict[word] = v + 1
-
-			} else {
-				dict[word] = 1
+			for _, stopWord := range stopWordsArr {
+				if word == stopWord {
+					startChar = -1
+					flag = true
+				}
+			}
+			for ind, w := range wordsDict {
+				if w == word {
+					freqDict[ind]++
+					startChar = -1
+					break
+				}
+			}
+			if !flag {
+				wordsDict = append(wordsDict, word)
+				freqDict = append(freqDict, 1)
+				startChar = -1
 			}
 		}
 	}
 
-	sortedWords := make([]string, 0, len(dict))
-	for k := range dict {
-		sortedWords = append(sortedWords, k)
-	}
-
-	//selection sorting algorithm
-	for i := 0; i < len(sortedWords)-1; i++ {
+	for i := 0; i < len(wordsDict)-1; i++ {
 		maxIdx := i
-		for j := i + 1; j < len(sortedWords); j++ {
-			if dict[sortedWords[j]] > dict[sortedWords[maxIdx]] {
+		for j := i + 1; j < len(wordsDict); j++ {
+			if freqDict[j] > freqDict[maxIdx] {
 				maxIdx = j
 			}
 		}
 		if maxIdx != i {
-			sortedWords[maxIdx], sortedWords[i] = sortedWords[i], sortedWords[maxIdx]
+			wordsDict[maxIdx], wordsDict[i] = wordsDict[i], wordsDict[maxIdx]
+			freqDict[maxIdx], freqDict[i] = freqDict[i], freqDict[maxIdx]
 		}
 	}
-	for _, word := range sortedWords[:25] {
-		fmt.Printf("%s  -  %d\n", word, dict[word])
+	for ind, word := range wordsDict[:25] {
+		fmt.Printf("%s  -  %d\n", word, freqDict[ind])
 	}
 }

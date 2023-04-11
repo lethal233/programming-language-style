@@ -3,15 +3,14 @@ package main
 import (
 	"bufio"
 	"os"
-	"sort"
 	"strings"
 	"unicode"
 )
 
 var data []rune
 var words []string
-var wordFrequencies = map[string]int{}
-var sortedWords []string
+var wdDict []string
+var frqDict []int32
 
 func readFile(path2file string) {
 	file, err := os.Open(path2file)
@@ -42,7 +41,7 @@ func scan() {
 }
 
 func removeStopWords() {
-	stopWordsSet := map[string]bool{}
+	var stopWordsList []string
 	file, err := os.Open("../stop_words.txt")
 	if err != nil {
 		os.Exit(1)
@@ -50,16 +49,23 @@ func removeStopWords() {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		stopWords := strings.Split(scanner.Text(), ",")
-		for i := 0; i < len(stopWords); i++ {
-			stopWordsSet[stopWords[i]] = true
-		}
-	}
-	for i := 'a'; i <= 'z'; i++ {
-		stopWordsSet[string(i)] = true
+		stopWordsList = strings.Split(scanner.Text(), ",")
 	}
 	for i := 0; i < len(words); i++ {
-		if stopWordsSet[words[i]] {
+		//println(words[i])
+		flag := false
+		if len(words[i]) < 2 {
+			words = append(words[:i], words[i+1:]...)
+			i--
+			continue
+		}
+		for _, stopWord := range stopWordsList {
+			if words[i] == stopWord {
+				flag = true
+				break
+			}
+		}
+		if flag {
 			words = append(words[:i], words[i+1:]...)
 			i--
 		}
@@ -68,23 +74,34 @@ func removeStopWords() {
 
 func frequencies() {
 	for w := range words {
-		if v, ok := wordFrequencies[words[w]]; ok {
-			wordFrequencies[words[w]] = v + 1
-		} else {
-			wordFrequencies[words[w]] = 1
+		flg := false
+		for ind, wd := range wdDict {
+			if wd == words[w] {
+				frqDict[ind]++
+				flg = true
+				break
+			}
+		}
+		if !flg {
+			wdDict = append(wdDict, words[w])
+			frqDict = append(frqDict, 1)
 		}
 	}
 }
 
 func sort2() {
-	sortedWords = make([]string, 0, len(wordFrequencies))
-	for k := range wordFrequencies {
-		sortedWords = append(sortedWords, k)
+	for i := 0; i < len(wdDict)-1; i++ {
+		maxIdx := i
+		for j := i + 1; j < len(frqDict); j++ {
+			if frqDict[j] > frqDict[maxIdx] {
+				maxIdx = j
+			}
+		}
+		if maxIdx != i {
+			wdDict[maxIdx], wdDict[i] = wdDict[i], wdDict[maxIdx]
+			frqDict[maxIdx], frqDict[i] = frqDict[i], frqDict[maxIdx]
+		}
 	}
-
-	sort.Slice(sortedWords, func(i, j int) bool {
-		return wordFrequencies[sortedWords[i]] > wordFrequencies[sortedWords[j]]
-	})
 }
 
 func main() {
@@ -95,6 +112,6 @@ func main() {
 	frequencies()
 	sort2()
 	for i := 0; i < 25; i++ {
-		println(sortedWords[i], " - ", wordFrequencies[sortedWords[i]])
+		println(wdDict[i], " - ", frqDict[i])
 	}
 }

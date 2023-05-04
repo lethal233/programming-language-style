@@ -92,11 +92,12 @@ func main() {
 	var fileName string
 	if len(os.Args) < 2 {
 		fileName = "../input.txt"
+	} else {
+		fileName = os.Args[1]
 	}
-	fileName = os.Args[1]
 	wordFreqs := sortWords21(frequencies21(removeStopWords21(extractWords21(fileName))))
 
 	for _, wc := range wordFreqs[:25] {
-		fmt.Printf("%s - %d\n", wc.word, wc.count)
+		fmt.Printf("%s  -  %d\n", wc.word, wc.count)
 	}
 }

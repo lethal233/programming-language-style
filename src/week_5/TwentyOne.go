@@ -17,7 +17,7 @@ func extractWords21(pathToFile string) []string {
 
 	content, err := ioutil.ReadFile(pathToFile)
 	if err != nil {
-		fmt.Printf("I/O error when opening %s: %v! I quit!", pathToFile, err)
+		fmt.Printf("I/O error when opening %s: %v\n", pathToFile, err)
 		return []string{}
 	}
 
@@ -31,8 +31,8 @@ func removeStopWords21(wordList []string) []string {
 	stopWordsFile := filepath.Join("..", "stop_words.txt")
 	content, err := ioutil.ReadFile(stopWordsFile)
 	if err != nil {
-		fmt.Printf("I/O error when opening %s: %v! I quit!", stopWordsFile, err)
-		return []string{}
+		fmt.Printf("I/O error when opening %s: %v\n", stopWordsFile, err)
+		return wordList
 	}
 
 	stopWords := strings.Split(string(content), ",")
@@ -91,7 +91,7 @@ type wordCount21 struct {
 func main() {
 	var fileName string
 	if len(os.Args) < 2 {
-		fileName = "../input.txt"
+		fileName = "../pride-and-prejudice.txt" // here the reasonable (default) value is ../pride-and-prejudice.txt
 	} else {
 		fileName = os.Args[1]
 	}

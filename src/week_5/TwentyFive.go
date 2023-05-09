@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"regexp"
@@ -62,7 +63,7 @@ func extractWords(path2file interface{}) interface{} {
 		}
 		reg, err := regexp.Compile("[\\W_]+")
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		return strings.Fields(reg.ReplaceAllString(strings.ToLower(string(da)), " "))
 	}
@@ -75,7 +76,7 @@ func removeStopWords(words interface{}) interface{} {
 		stopWordsSet := map[string]bool{}
 		file, err := os.Open("../stop_words.txt")
 		if err != nil {
-			os.Exit(1)
+			log.Fatal(err)
 		}
 		defer file.Close()
 		scanner := bufio.NewScanner(file)

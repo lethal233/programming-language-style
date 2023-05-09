@@ -11,14 +11,16 @@ import (
 	"strings"
 )
 
+var myLog = log.New(os.Stderr, "\033[0;31m[Error]\033[0m ", log.LstdFlags|log.Llongfile)
+
 func extractWords22(pathToFile string) ([]string, error) {
 	if pathToFile == "" {
-		log.Fatalf("I need a non-empty string!")
+		myLog.Fatalf("I need a non-empty string!\n")
 	}
 
 	content, err := ioutil.ReadFile(pathToFile)
 	if err != nil {
-		fmt.Printf("I/O error when opening %s: %v! I quit!", pathToFile, err)
+		fmt.Printf("I/O error when opening %s: %v! I quit!\n", pathToFile, err)
 		return nil, err
 	}
 
@@ -35,7 +37,7 @@ func removeStopWords22(wordList []string, e error) ([]string, error) {
 	stopWordsFile := filepath.Join("..", "stop_words.txt")
 	content, err := ioutil.ReadFile(stopWordsFile)
 	if err != nil {
-		fmt.Printf("I/O error when opening %s: %v! I quit!", stopWordsFile, err)
+		fmt.Printf("I/O error when opening %s: %v! I quit!\n", stopWordsFile, err)
 		return nil, err
 	}
 
@@ -44,7 +46,7 @@ func removeStopWords22(wordList []string, e error) ([]string, error) {
 		stopWords = append(stopWords, string(i))
 	}
 
-	filteredWords := []string{}
+	var filteredWords []string
 	for _, word := range wordList {
 		if !stringInSlice22(word, stopWords) {
 			filteredWords = append(filteredWords, word)
@@ -94,19 +96,19 @@ type wordCount struct {
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalf("You idiot! I need an input file!")
+		myLog.Fatalf("You idiot! I need an input file!\n")
 	}
 	pathToFile := os.Args[1]
 	wordFreqs, err := sortWords(frequencies22(removeStopWords22(extractWords22(pathToFile))))
 	if err != nil {
-		log.Fatalf("Something Wrong: %v", err)
+		myLog.Fatalf("Something Wrong: %v\n", err)
 	}
 
 	if len(wordFreqs) < 25 {
-		log.Fatalf("SRSLY? Less than 25 words!")
+		myLog.Fatalf("SRSLY? Less than 25 words!\n")
 	}
 
 	for _, wc := range wordFreqs[:25] {
-		fmt.Printf("%s - %d\n", wc.word, wc.count)
+		fmt.Printf("%s  -  %d\n", wc.word, wc.count)
 	}
 }

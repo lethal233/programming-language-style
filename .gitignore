@@ -24,3 +24,6 @@ go.work
 ./Main.go
 bin/
 .DS_Store
+*.class
+*.jar
+

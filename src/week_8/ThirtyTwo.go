@@ -15,9 +15,6 @@ func main() {
 
 	stopWordsData, _ := ioutil.ReadFile(stopWordsFile)
 	stopWords := strings.Split(string(stopWordsData), ",")
-	for i := 'a'; i <= 'z'; i++ {
-		stopWords = append(stopWords, string(i))
-	}
 
 	data, _ := ioutil.ReadFile(filePath)
 	dataStr := string(data)
@@ -36,13 +33,17 @@ type wordFreq32 struct {
 	count int
 }
 
-func partition(dataStr string, nlines int) []string {
+// generator like yield
+func partition(dataStr string, nlines int) chan string {
 	lines := strings.Split(dataStr, "\n")
-	var partitions []string
-	for i := 0; i < len(lines); i += nlines {
-		partitions = append(partitions, strings.Join(lines[i:min(i+nlines, len(lines))], "\n"))
-	}
-	return partitions
+	ch := make(chan string)
+	go func() {
+		for i := 0; i < len(lines); i += nlines {
+			ch <- strings.Join(lines[i:min(i+nlines, len(lines))], "\n")
+		}
+		close(ch)
+	}()
+	return ch
 }
 func min(a, b int) int {
 	if a < b {
@@ -52,17 +53,21 @@ func min(a, b int) int {
 	}
 }
 
-func mapSplitWords(partitions []string, stopWords []string) [][]wordFreq32 {
+func mapSplitWords(partitions chan string, stopWords []string) [][]wordFreq32 {
 	var result [][]wordFreq32
-	for _, partition := range partitions {
-		result = append(result, splitWords(partition, stopWords))
+	for p := range partitions {
+		if p != "" {
+			result = append(result, splitWords(p, stopWords))
+		} else {
+			break
+		}
 	}
 	return result
 }
 
 func splitWords(dataStr string, stopWords []string) []wordFreq32 {
-	wordRegexp := regexp.MustCompile(`[\W_]+`)
-	words := wordRegexp.Split(strings.ToLower(dataStr), -1)
+	wordRegexp := regexp.MustCompile(`[a-z]{2,}`)
+	words := wordRegexp.FindAllString(strings.ToLower(dataStr), -1)
 	var wordFreqs []wordFreq32
 	for _, word := range words {
 		if !contains32(stopWords, word) {

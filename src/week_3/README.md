@@ -1,5 +1,3 @@
-
-
 ## Week 3
 
 `cd Week3`
